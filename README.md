@@ -20,7 +20,7 @@ Install is easy. For Debian/Ubuntu just run apt-get install ipmitool snmp
 ### Installation procedure.
 Copy files somewhere you want.
 Make sure files ups_action.sh, ups_monitor.sh and upsshutdownagent are executable.
-Edit upsshutdownagent and edit path to ups_monitor.sh script
+Edit upsshutdownagent and edit path to ups_monitor.sh script.
 Copy upsshutdownagent to some init directory (/etc/init, or /etc/init.d) if you are still using upstart. If not - change execution method for your own.
 (/bin/systemctl daemon-reload will initiate it)
 
