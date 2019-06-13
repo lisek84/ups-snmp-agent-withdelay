@@ -34,6 +34,10 @@ Configuration is described in config.cfg file.
 
 Hope it will help in your job.
 
+### How to run
+Run:
+service upsshutdownagent (start|stop|restart|status)
+
 ## Authors
 * **Lisek** (https://github.com/lisek84)
 
