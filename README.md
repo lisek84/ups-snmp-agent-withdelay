@@ -1,7 +1,9 @@
 # UPS SNMP Shutdown Agent with Slave machines support
 
 This tool will monitor your UPS over snmp.
-And if powerdown will be detected. It will shutdown your computers.
+
+And if powerdown will be detected. It will shutdown your computers
+.
 For this it uses IPMI, but you can change it and define your own methods (ssh, psexec etc)
 It is different from other tools because it's prepared for storage boxes.
 
