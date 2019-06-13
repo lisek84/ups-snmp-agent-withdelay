@@ -13,7 +13,7 @@ walkexited=$?
 
 if [ "$connection_fatal" -ne 0 ]; then
        if [ "$walkexited" -ne 0 ]; then
-       echo "I'm configured to die if snmp communication fails. Snmp walk exited with error"
+       echo "I'm configured to die if snmp communication fails. Snmp walk exited with error" >>$logfile
        exit 1
        fi
 fi
@@ -21,8 +21,8 @@ fi
 
 
 if [[ $snmptest == *"No Such Object available"* ]]; then
-        echo "No Such OID. This is OK if OID is one of the alarm OIDs. Setting \"OK\" Answer"
-	echo "Also. If you made mistake in configuration of OID, You really don't want me to kill all your machines Huh? :-)"
+        echo "No Such OID. This is OK if OID is one of the alarm OIDs. Setting \"OK\" Answer" >>$logfile
+	echo "Also. If you made mistake in configuration of OID, You really don't want me to kill all your machines Huh? :-)" >>$logfile
 	continue
 fi
 
