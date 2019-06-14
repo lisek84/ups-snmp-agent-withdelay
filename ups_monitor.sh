@@ -12,7 +12,7 @@ snmptest=`$snmpwalk -c $community -v$snmpversion $IPaddress $shutdownoid 2>/dev/
 walkexited=$?
 
 if [ "$connection_fatal" -ne 0 ]; then
-        eval $alarmline "UPS Alarm: Unable to connecto to snmp server"
+        eval $alarmline "$alarmunable" &
        if [ "$walkexited" -ne 0 ]; then
        echo "I'm configured to die if snmp communication fails. Snmp walk exited with error" >>$logfile
        exit 1
@@ -37,15 +37,17 @@ if [ "$ups_status" -eq $normaltrap ]; then sleep $polldelay; continue; else
                 echo ---------------- >>$logfile
                 echo `date` >>$logfile
                 echo "ALARM I HAVE DETECTED THERE IS NO POWER!!! IF IT WILL NOT COME BACK IN $waittime SECONDS. I WILL BEGIN SHUTING EVERYTHING DOWN" >>$logfile
-                eval $alarmline "UPS Alarm: Datacenter Powered from Battery"
+                eval $alarmline "$alarmbattery" &
 # Waiting for power come back
                 sleep $waittime
                 ups_status=`$snmpwalk -c $community -v$snmpversion $IPaddress $shutdownoid 2>/dev/null|cut -d':' -f2 | xargs | sed -re 's/([0-9])([0-9]{1})($|[^0-9])/\1\2\3/'`
 
-                if [ "$ups_status" -eq $normaltrap ]; then echo "UFF. WE GOT THE POWER BACK!!!! NOTHING HAPPENED STEP ASIDE" >>$logfile; continue
+                if [ "$ups_status" -eq $normaltrap ]; then echo "UFF. WE GOT THE POWER BACK!!!! NOTHING HAPPENED STEP ASIDE" >>$logfile;
+                        eval $alarmline "$alarmok" &
+                        continue
                 else
                 echo "I'm SORRY BUT THERE IS STILL NO POWER. I'M RUNNING SHUTDOWN PROCEDURE NOW!" >>$logfile
-                eval $alarmline "UPS Alarm: Running datacenter shutdown procedure NOW!"
+                eval $alarmline "$alarmshutdown" &
                 # Checking how many declared groups of servers do I have configured as variables from configuration file.
                 numofgroups=`declare -p | grep shutdowngroup | wc -l`
 
@@ -66,7 +68,7 @@ if [ "$ups_status" -eq $normaltrap ]; then sleep $polldelay; continue; else
 
         else
                 echo "I've got some Unknown UPS Status, Don't know what to do! I'm sounding alarm and killing myself!" >>$logfile
-                eval $alarmline "UPS Alarm: Unknown status got from UPS SNMP server"
+                eval $alarmline "$alarmunknown"
                 exit 1
 
         fi
