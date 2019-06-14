@@ -26,6 +26,9 @@ Edit upsshutdownagent and edit path to ups_monitor.sh script.
 Copy upsshutdownagent to some init directory (/etc/init, or /etc/init.d) if you are still using upstart. If not - change execution method for your own.
 (/bin/systemctl daemon-reload will initiate it)
 
+To enable it at boot time
+systemctl enable upsshutdownagent
+
 Installation is over.
 
 ### Configuration
