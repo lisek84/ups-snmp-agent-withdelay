@@ -4,7 +4,8 @@
 cd `dirname $0`
 . config.cfg
 
-
+unknownalarmed=0
+bypassalarmed=0
 while :
 do
 # Looking for "No Such Object" output if snmp server is not responding with this OID. It's normal when you set OID to one of the alarms.
@@ -39,6 +40,12 @@ if [ "$ups_status" -eq $normaltrap ]; then sleep $polldelay; continue; else
                 echo "ALARM I HAVE DETECTED THERE IS NO POWER!!! IF IT WILL NOT COME BACK IN $waittime SECONDS. I WILL BEGIN SHUTING EVERYTHING DOWN" >>$logfile
                 eval $alarmline "$alarmbattery" &
 # Waiting for power come back
+
+                #Checking how low is battery level, and decreasing wait time if it's bad
+                batt_status=`$snmpwalk -c $community -v$snmpversion $IPaddress $batteryoid 2>/dev/null|cut -d':' -f2 | xargs | sed -re 's/([0-9])([0-9]{1})($|[^0-9])/\1\2\3/'`
+                if [ "$batt_status" -le "$lowbatt_level" ] ; then echo "BATTERY IS LOW!!! SHORTING WAIT TIME!" >>"$logfile" ; waittime=$lowbatt_waittime; fi
+
+                # Now waiting for energy to hopefully come back
                 sleep $waittime
                 ups_status=`$snmpwalk -c $community -v$snmpversion $IPaddress $shutdownoid 2>/dev/null|cut -d':' -f2 | xargs | sed -re 's/([0-9])([0-9]{1})($|[^0-9])/\1\2\3/'`
 
@@ -67,9 +74,24 @@ if [ "$ups_status" -eq $normaltrap ]; then sleep $polldelay; continue; else
 
 
         else
-                echo "I've got some Unknown UPS Status, Don't know what to do! I'm sounding alarm and killing myself!" >>$logfile
-                eval $alarmline "$alarmunknown"
-                exit 1
+                if [ "$ups_status" -eq "$bypasstrap" ]; then
+                        if [ "$bypassalarmed" -eq 0 ]; then
+                                echo "`date` - UPS is running at bypass" >>$logfile
+                                eval $alarmline "$alarmbypass"
+                                bypassalarmed=1
+                        fi
+                else
+
+                        if [ "$unknownalarmed" -eq 0 ]; then
+                                echo "I've got some Unknown UPS Status, Don't know what to do! I'm sounding alarm" >>$logfile
+                                echo "Received status is $ups_status" >>$logfile
+                                eval $alarmline "$alarmunknown"
+                                unknownalarmed=1
+                                if [ "$other_fatal" -eq 1 ]; then exit 1; fi
+                        else
+                                if [ "$other_fatal" -eq 1 ]; then exit 1; fi
+                        fi
+                fi
 
         fi
 fi
