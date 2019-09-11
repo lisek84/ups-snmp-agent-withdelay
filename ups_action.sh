@@ -6,7 +6,7 @@ if [ "$#" -lt '1' ]; then
         echo ----------------------------------------------------------------
         echo - Please provide IP addresses required for datacenter shutdown -
         echo -                                                              -
-        echo -  $0 - MainIP SlaveIP1 SlaveIP2 SlaveIP3......              -
+        echo -  $0 - MainIP MainPING_IP SlaveIP1 SlaveIP2 SlaveIP3......    -
         echo ----------------------------------------------------------------
         exit 1
 fi
@@ -16,6 +16,12 @@ cd `dirname $0`
 . config.cfg
 
 MainMachineIP="$1"
+if [ "x$2" != "x" ]; then
+MachinePingIP="$2"
+shift
+else
+MachinePingIP=$MainMachineIP
+fi
 shift
 SlavesIP="$@"
 
@@ -43,7 +49,7 @@ if [ "$waituntildown" -eq 0 ]; then
 
 
 else
-                        if [ "$killeitherway" -eq 0 ]; then echo "I'll wait and try to ping $MainMachineIP in $loopwaitdelay second loops. And I'll kill all the slaves: $SlavesIP but only if main server is really down and not responding. Else I'll end in endless loop of waiting"
+                        if [ "$killeitherway" -eq 0 ]; then echo "I'll wait and try to ping $MachinePingIP in $loopwaitdelay second loops. And I'll kill all the slaves: $SlavesIP but only if main server is really down and not responding. Else I'll end in endless loop of waiting"
                         echo "SENDING SHUTDOWN TO MAIN MACHINE:"
                         ipmilogin=`grep -w $MainMachineIP credentials.cfg | awk '{print $2}'`
                         ipmipass=`grep -w $MainMachineIP credentials.cfg | awk '{print $3}'`
@@ -55,7 +61,7 @@ else
                                 code=0
                                 until [ "$code" -ne 0 ]; do
                                 sleep $loopwaitdelay
-                                result=`ping -c 10 -W 10 -w 10 $MainMachineIP 1>/dev/null 2>&1`;
+                                result=`ping -c 10 -W 10 -w 10 $MachinePingIP 1>/dev/null 2>&1`;
                                 code=$?
                                 done
 
@@ -69,7 +75,7 @@ else
                                 exit 0
 
                         else
-                        echo "I'll wait and try to ping $MainMachineIP for $wait_until_main_down_for seconds. And after this I'll kill all the slaves: $SlavesIP even is main server is still running."
+                        echo "I'll wait for $wait_until_main_down_for seconds. And after this I'll kill all the slaves: $SlavesIP even is main server is still running."
                         echo "SENDING SHUTDOWN TO MAIN MACHINE:"
                         ipmilogin=`grep -w $MainMachineIP credentials.cfg | awk '{print $2}'`
                         ipmipass=`grep -w $MainMachineIP credentials.cfg | awk '{print $3}'`
